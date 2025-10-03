@@ -225,14 +225,14 @@ export default {
         whatsapp_business_id: '',
         // currentBalance: 0 ,
       },
-      navItems: [
-        { name: 'broadcast', label: 'Broadcast', icon: 'bi bi-broadcast', path: '/broadcast/broadcast2' },
-        { name: 'Contacts', label: 'Contacts', icon: 'bi bi-person-video2', path: '/contacts/contacts1' },
-        { name: 'Integration', label: 'Integration', icon: 'bi bi-plugin', path: '/integration/integration1' },
-        { name: 'chatbot', label: 'Chatbot', path: '/chatbot/chatbotview', icon: 'bi bi-robot' },
-        { name: 'Analytics', label: 'Analytics', path: '/analytics/cost', icon: 'bi bi-graph-up' },
-        // { name: 'AI Agent', label: 'AIagent', path: '/agent', icon: 'bi bi-robot' }
-      ],
+    navItems: [
+  { name: 'broadcast', label: 'Broadcast', icon: 'bi bi-broadcast', path: '/broadcast/broadcast2' },
+  { name: 'Contacts', label: 'Contacts', icon: 'bi bi-person-video2', path: '/contacts/contacts1' },
+  { name: 'Integration', label: 'Integration', icon: 'bi bi-plugin', path: '/integration/integration1' },
+  { name: 'chatbot', label: 'Chatbot', path: '/chatbot/chatbotview', icon: 'bi bi-robot' },
+  { name: 'MessageGen', label: 'Message Generator', path: '/chatbot/messagegen', icon: 'bi bi-chat-right-text' }, 
+  { name: 'Analytics', label: 'Analytics', path: '/analytics/cost', icon: 'bi bi-graph-up' },
+],
       user: null,
       dropdownOpen: false,
       showProfilePopup: false,

@@ -18,6 +18,7 @@ import Analytics from "./components/analytics/Analytics.vue";
 import TermsAndPrivacy from "./views/TermsAndPrivacy.vue";
 import { useToast } from "vue-toastification";
 
+
 const toast = useToast();
 
 const routes = [
@@ -79,7 +80,15 @@ const routes = [
         path: "/chatbot/chatbotview",
         component: ChatbotView,
         name: "ChatbotView",
-      }, // Updated path
+      },
+      
+      {
+  path: "/chatbot/messagegen",
+  name: "MessageGen",
+  component: () => import("@/components/GenerateMessage.vue"),
+}
+
+      // Updated path
       // Add more routes within the dashboard as needed
     ],
   },

@@ -1,67 +1,63 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from ..Schemas import JWTtoken_schema, user
-from ..models import User
-from ..database import database
-from ..hashing import Hash
-from ..oauth2 import get_current_user
-from .. import JWTtoken
-from fastapi.security import OAuth2PasswordRequestForm
-
-router = APIRouter(tags=["Auth"])
-
-# @router.post("/login")
-# def login(request: OAuth2PasswordRequestForm=Depends(), db: Session = Depends(database.get_db)):
-#     # Find the user by email
-#     user = db.query(User.User).filter(User.User.email == request.username).first()
-
-#     # Check if the user exists
-#     if not user:
-#         raise HTTPException(status_code=400, detail="Invalid Credentials")
-    
-#     #user # Verify the password
-   
-   
-#     if not Hash.verify(request.password, user.password_hash):
-#         raise HTTPException(status_code=400, detail="Invalid password")
-    
-
-#     access_token = JWTtoken.create_access_token(
-#         data={"sub": user.email})
-   
-#     return {"access_token":access_token,"token-type":"bearer"}
-    
-    # Return user information or a token (depending on your implementation)
-    # return {"message": "Login successful", "user": user.password_hash}
-
-
-# @router.get("/users/me", response_model=user.newuser)
-# def read_users_me(current_user: JWTtoken_schema.TokenData = Depends(get_current_user)):
-#     return current_user
-
-from fastapi import APIRouter, HTTPException, Depends
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from ..database import database
+from ..models import User  # SQLAlchemy User model
+from ..Schemas import user as user_schema
+from ..hashing import Hash
+from .. import JWTtoken
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/auth",
+    tags=["Authentication"]
+)
 
-@router.post("/login")
-async def login(request: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(database.get_db)):
-    # Find the user by email
+# ✅ Register new user
+@router.post("/register", status_code=status.HTTP_201_CREATED)
+async def register(request: user_schema.register_user, db: AsyncSession = Depends(database.get_db)):
+    # Check if user already exists
     result = await db.execute(
-        select(User.User).filter(User.User.email == request.username)
+        select(User.User).filter(User.User.email == request.email)
     )
+    existing_user = result.scalars().first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    # Hash password correctly
+    password_hash = Hash.bcrypt(request.password)
+
+    # Create new user object
+    new_user = User.User(
+        username=request.username,
+        email=request.email,
+        password_hash=password_hash,  # store hashed password
+        WABAID=request.WABAID,
+        PAccessToken=request.PAccessToken,
+        Phone_id=request.Phone_id,
+        api_key=request.cf_token
+    )
+
+    db.add(new_user)
+    await db.commit()
+    await db.refresh(new_user)
+
+    return {"message": "User registered successfully", "email": new_user.email}
+
+# ✅ Login user
+@router.post("/login")
+async def login(request: user_schema.LoginUser, db: AsyncSession = Depends(database.get_db)):
+    # Find user by username
+    result = await db.execute(select(User.User).filter(User.User.username == request.username))
     user = result.scalars().first()
 
-    # Check if the user exists
     if not user:
-        raise HTTPException(status_code=400, detail="Invalid Credentials")
+        raise HTTPException(status_code=400, detail="Invalid username")
 
-    # Verify the password
+    # Verify hashed password
     if not Hash.verify(request.password, user.password_hash):
         raise HTTPException(status_code=400, detail="Invalid password")
 
-    access_token = JWTtoken.create_access_token(data={"sub": user.email})
+    # Generate JWT token
+    access_token = JWTtoken.create_access_token(data={"sub": user.username})
 
     return {"access_token": access_token, "token_type": "bearer"}
